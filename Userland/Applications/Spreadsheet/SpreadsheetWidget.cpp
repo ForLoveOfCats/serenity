@@ -232,6 +232,36 @@ void SpreadsheetWidget::resize_event(GUI::ResizeEvent& event)
         m_inline_documentation_window->set_rect(m_cell_value_editor->screen_relative_rect().translated(0, m_cell_value_editor->height() + 7).inflated(6, 6));
 }
 
+String SpreadsheetWidget::format_range_identifier(Sheet const& sheet, Vector<Position> const& selection)
+{
+    VERIFY(selection.size() > 0);
+
+    auto first = selection.first();
+
+    size_t min_column = first.column;
+    size_t max_column = 0;
+    size_t min_row = first.row;
+    size_t max_row = 0;
+
+    //Very gross O(n)
+    for (auto entry : selection) {
+        if (entry.column < min_column)
+            min_column = entry.column;
+        else if (entry.column > max_column)
+            max_column = entry.column;
+
+        if (entry.row < min_row)
+            min_row = entry.row;
+        else if (entry.row > max_row)
+            max_row = entry.row;
+    }
+
+    auto start = Position(min_column, min_row).to_cell_identifier(sheet);
+    auto end = Position(max_column, max_row).to_cell_identifier(sheet);
+
+    return String::formatted("{}:{}", start, end);
+}
+
 void SpreadsheetWidget::setup_tabs(NonnullRefPtrVector<Sheet> new_sheets)
 {
     RefPtr<GUI::Widget> first_tab_widget;
@@ -286,10 +316,9 @@ void SpreadsheetWidget::setup_tabs(NonnullRefPtrVector<Sheet> new_sheets)
             }
 
             // There are many cells selected, change all of them.
-            StringBuilder builder;
-            builder.appendff("<{}>", selection.size());
+            auto range_identifier = format_range_identifier(sheet, selection);
             m_current_cell_label->set_enabled(true);
-            m_current_cell_label->set_text(builder.string_view());
+            m_current_cell_label->set_text(range_identifier);
 
             Vector<Cell&> cells;
             for (auto& position : selection)

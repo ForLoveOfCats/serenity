@@ -47,6 +47,8 @@ private:
 
     explicit SpreadsheetWidget(NonnullRefPtrVector<Sheet>&& sheets = {}, bool should_add_sheet_if_empty = true);
 
+    String format_range_identifier(Sheet const& sheet, Vector<Position> const& selection);
+
     void setup_tabs(NonnullRefPtrVector<Sheet> new_sheets);
 
     void try_generate_tip_for_input_expression(StringView source, size_t offset);
